@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CIS Endpoint Hardening // Live Telemetry Console - Anu Sah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Space Grotesk', sans-serif; background-color: #07090E; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen p-4 sm:p-8 flex flex-col justify-between">
+  <!-- HUD Header -->
+  <header class="max-w-6xl mx-auto w-full mb-8 flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
+    <div class="flex items-center gap-3">
+      <a href="../../" class="text-xs font-mono px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-violet-400 hover:text-white transition-colors">
+        ← BACK TO PORTFOLIO
+      </a>
+      <span class="text-slate-600 font-mono">/</span>
+      <span class="text-xs font-mono text-slate-400">PROJ-03 // LIVE DEMO</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="https://github.com/AnuSah99/Anusah99.github.io/tree/main/projects/endpoint-hardening-telemetry" target="_blank" class="text-xs font-mono px-3.5 py-1.5 rounded-lg bg-violet-500/20 border border-violet-400/50 text-violet-300 hover:bg-violet-500/30 transition-all font-bold">
+        VIEW SOURCE REPO ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl mx-auto w-full flex-1 space-y-6">
+    <div class="p-6 sm:p-8 rounded-3xl bg-[#0B1120] border border-violet-500/30 shadow-[0_0_60px_-15px_rgba(139,92,246,0.3)]">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-white/10">
+        <div>
+          <div class="flex items-center gap-2 font-mono text-xs text-violet-400 font-bold mb-1">
+            <span class="w-2 h-2 rounded-full bg-violet-400 animate-pulse"></span>
+            CIS BENCHMARK LEVEL 1 COMPLIANCE & INCIDENT DRIFT REMEDIATION
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white">Endpoint Hardening & Security Telemetry</h1>
+          <p class="text-slate-400 text-sm mt-1 max-w-2xl font-sans">
+            Engineered by Anu Sah. Automates LSASS process isolation, SMBv1 neutralization, Responder attack mitigation, BitLocker volume encryption, and SentinelOne EDR package deployment across enterprise fleets.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- OS Switcher -->
+          <div class="p-1 rounded-xl bg-black border border-white/10 flex font-mono text-xs">
+            <button id="os-win" class="px-3 py-1 rounded-lg bg-violet-950/80 border border-violet-500/50 text-violet-300 font-bold transition-all">
+              WINDOWS 11
+            </button>
+            <button id="os-linux" class="px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all">
+              LINUX LTS
+            </button>
+          </div>
+
+          <button id="drift-btn" class="px-3 py-1.5 rounded-xl font-mono text-xs font-semibold bg-slate-900 border border-white/10 hover:border-amber-400/50 text-slate-200 transition-all">
+            SIMULATE DRIFT
+          </button>
+          <button id="remediate-btn" class="px-4 py-1.5 rounded-xl font-mono text-xs font-bold bg-violet-500/20 hover:bg-violet-500/30 border border-violet-400/60 text-violet-300 transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+            REMEDIATE FLEET
+          </button>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div id="notice-toast" class="hidden p-3 mb-4 rounded-xl bg-violet-950/80 border border-violet-500/40 text-violet-300 font-mono text-xs"></div>
+
+      <!-- KPI Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 font-mono">
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-white/10">
+          <div class="text-[10px] text-slate-500">HOST IDENTIFIER</div>
+          <div class="text-sm font-bold text-white" id="host-id">SEC-CORP-W11-PROD</div>
+          <div class="text-[10px] text-violet-400">Node Location: Gurugram</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-white/10">
+          <div class="text-[10px] text-slate-500">EDR AGENT HEALTH</div>
+          <div class="text-sm font-bold text-emerald-400">SentinelOne v23.4</div>
+          <div class="text-[10px] text-cyan-400">Agent Heartbeat Active</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-white/10">
+          <div class="text-[10px] text-slate-500">CIS BENCHMARK SCORE</div>
+          <div class="text-sm font-bold text-violet-400" id="compliance-score">100% Compliant</div>
+          <div class="text-[10px] text-slate-400">Level 1 Enterprise</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-white/10">
+          <div class="text-[10px] text-slate-500">ENCRYPTION PROTOCOL</div>
+          <div class="text-sm font-bold text-cyan-400" id="encryption-label">BitLocker XTS-256</div>
+          <div class="text-[10px] text-emerald-400">Hardware TPM 2.0</div>
+        </div>
+      </div>
+
+      <!-- Policies Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 font-mono" id="policies-grid">
+        <!-- Rendered by JS -->
+      </div>
+    </div>
+  </main>
+
+  <footer class="max-w-6xl mx-auto w-full mt-8 pt-4 border-t border-white/10 text-center font-mono text-xs text-slate-500">
+    ANU SAH // INFRASTRUCTURE & IT SECURITY ENGINEER (@Anusah99)
+  </footer>
+
+  <script>
+    const winPolicies = [
+      { name: 'LSASS RunAsPPL Protection', cat: 'Credential Safeguard', status: 'enforced', desc: 'Isolates LSASS.exe process memory, blocking Mimikatz cleartext credential dumps.', cmd: 'Set-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Lsa" -Name "RunAsPPL" -Value 1' },
+      { name: 'SMBv1 Legacy Protocol', cat: 'Network Protocol', status: 'enforced', desc: 'Disables deprecated SMBv1 to neutralize EternalBlue (MS17-010) lateral movement.', cmd: 'Disable-WindowsOptionalFeature -Online -FeatureName "SMB1Protocol" -NoRestart' },
+      { name: 'LLMNR & NetBIOS over TCP', cat: 'Name Resolution', status: 'enforced', desc: 'Mitigates NTLM relay attacks and Responder poisoning across subnet broadcasts.', cmd: 'Set-ItemProperty -Path "HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows NT\\DNSClient" -Name "EnableMulticast" -Value 0' },
+      { name: 'WDigest Cleartext Caching', cat: 'Authentication', status: 'enforced', desc: 'Forces Digest SSP to never store plaintext credentials in system memory.', cmd: 'Set-ItemProperty -Path "HKLM:\\SYSTEM\\CurrentControlSet\\Control\\SecurityProviders\\WDigest" -Name "UseLogonCredential" -Value 0' },
+      { name: 'BitLocker Volume Encryption', cat: 'Data-at-Rest', status: 'enforced', desc: 'Enforces hardware TPM 2.0 with XTS-AES 256-bit full disk volume encryption on C:.', cmd: 'Enable-BitLocker -MountPoint "C:" -EncryptionMethod XtsAes256 -UsedSpaceOnly' },
+      { name: 'SentinelOne Agent Heartbeat', cat: 'EDR Integration', status: 'enforced', desc: 'Real-time telemetry and autonomous behavioral AI engine active under SiteToken.', cmd: 'Start-Service -Name "SentinelAgent"' }
+    ];
+
+    const linuxPolicies = [
+      { name: 'Kernel TCP SYN Cookies', cat: 'Network Stack', status: 'enforced', desc: 'Prevents TCP SYN flood exhaustion via sysctl net.ipv4.tcp_syncookies = 1.', cmd: 'sysctl -w net.ipv4.tcp_syncookies=1' },
+      { name: 'OpenSSH Root Login & Password Auth', cat: 'Remote Access', status: 'enforced', desc: 'Enforces SSH key-only access (Ed25519) and drops direct root login attempts.', cmd: 'sed -i "s/^#PermitRootLogin.*/PermitRootLogin no/" /etc/ssh/sshd_config' },
+      { name: 'UFW Firewall Default Policy', cat: 'Perimeter Defense', status: 'enforced', desc: 'Enforces default-drop for all unsolicited incoming packets across network interfaces.', cmd: 'ufw default deny incoming && ufw --force enable' },
+      { name: 'Reverse Path Filtering (rp_filter)', cat: 'Spoofing Defense', status: 'enforced', desc: 'Drops spoofed packets whose source IP does not match kernel routing table rules.', cmd: 'sysctl -w net.ipv4.conf.all.rp_filter=1' }
+    ];
+
+    let currentOS = 'windows';
+    const grid = document.getElementById('policies-grid');
+    const toast = document.getElementById('notice-toast');
+    const hostId = document.getElementById('host-id');
+    const encLabel = document.getElementById('encryption-label');
+    const compScore = document.getElementById('compliance-score');
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    function render() {
+      const activeList = currentOS === 'windows' ? winPolicies : linuxPolicies;
+      const allEnforced = activeList.every(p => p.status === 'enforced');
+      compScore.textContent = allEnforced ? '100% Compliant' : '66.7% Drift Warning';
+      compScore.className = allEnforced ? 'text-sm font-bold text-violet-400' : 'text-sm font-bold text-rose-400 animate-pulse';
+
+      grid.innerHTML = activeList.map(p => `
+        <div class="p-4 rounded-xl border transition-all flex flex-col justify-between ${
+          p.status === 'enforced' ? 'bg-slate-900/60 border-white/10' : 'bg-rose-950/40 border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.2)]'
+        }">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[10px] text-violet-400 uppercase tracking-wider font-bold">${p.cat}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${
+                p.status === 'enforced' ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-400' : 'bg-rose-950/80 border border-rose-500/60 text-rose-300 animate-pulse'
+              }">
+                ${p.status === 'enforced' ? '✔ HARDENED' : '⚠ VULNERABLE'}
+              </span>
+            </div>
+            <h4 class="text-sm font-bold text-white mb-1.5">${p.name}</h4>
+            <p class="text-xs text-slate-400 font-sans leading-relaxed mb-3">${p.desc}</p>
+          </div>
+          <div class="p-2.5 rounded-lg bg-black/60 border border-white/5 text-[10px] text-slate-300 font-mono overflow-x-auto">
+            <span class="text-violet-400 mr-1.5">&gt;</span>
+            <code>${p.cmd}</code>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.getElementById('os-win').addEventListener('click', () => {
+      currentOS = 'windows';
+      document.getElementById('os-win').className = 'px-3 py-1 rounded-lg bg-violet-950/80 border border-violet-500/50 text-violet-300 font-bold transition-all';
+      document.getElementById('os-linux').className = 'px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all';
+      hostId.textContent = 'SEC-CORP-W11-PROD';
+      encLabel.textContent = 'BitLocker XTS-256';
+      render();
+    });
+
+    document.getElementById('os-linux').addEventListener('click', () => {
+      currentOS = 'linux';
+      document.getElementById('os-linux').className = 'px-3 py-1 rounded-lg bg-violet-950/80 border border-violet-500/50 text-violet-300 font-bold transition-all';
+      document.getElementById('os-win').className = 'px-3 py-1 rounded-lg text-slate-400 hover:text-white transition-all';
+      hostId.textContent = 'SRV-SEC-UBUNTU-01';
+      encLabel.textContent = 'LUKS2 dm-crypt';
+      render();
+    });
+
+    document.getElementById('drift-btn').addEventListener('click', () => {
+      if (currentOS === 'windows') {
+        winPolicies[0].status = 'vulnerable';
+        winPolicies[2].status = 'vulnerable';
+      } else {
+        linuxPolicies[1].status = 'vulnerable';
+      }
+      showToast('⚠ Drift Detected: Unauthorized policy change identified on local node!');
+      render();
+    });
+
+    document.getElementById('remediate-btn').addEventListener('click', async () => {
+      const btn = document.getElementById('remediate-btn');
+      btn.disabled = true;
+      btn.textContent = 'REMEDIATING...';
+      showToast('Executing automated remediation script (Harden-Endpoint.ps1)...');
+      await new Promise(r => setTimeout(r, 1400));
+      winPolicies.forEach(p => p.status = 'enforced');
+      linuxPolicies.forEach(p => p.status = 'enforced');
+      btn.disabled = false;
+      btn.textContent = 'REMEDIATE FLEET';
+      showToast('✔ 100% CIS Compliance Restored! All endpoints hardened.');
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

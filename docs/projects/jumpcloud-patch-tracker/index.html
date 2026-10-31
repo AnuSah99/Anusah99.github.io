@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JumpCloud Patch Telemetry // Live Dashboard - Anu Sah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Space Grotesk', sans-serif; background-color: #07090E; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen p-4 sm:p-8 flex flex-col justify-between">
+  <!-- HUD Header -->
+  <header class="max-w-6xl mx-auto w-full mb-8 flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
+    <div class="flex items-center gap-3">
+      <a href="../../" class="text-xs font-mono px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-emerald-400 hover:text-white transition-colors">
+        ← BACK TO PORTFOLIO
+      </a>
+      <span class="text-slate-600 font-mono">/</span>
+      <span class="text-xs font-mono text-slate-400">PROJ-02 // LIVE DEMO</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="https://github.com/AnuSah99/cloud_automation" target="_blank" class="text-xs font-mono px-3.5 py-1.5 rounded-lg bg-emerald-500/20 border border-emerald-400/50 text-emerald-300 hover:bg-emerald-500/30 transition-all font-bold">
+        VIEW GITHUB REPO ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl mx-auto w-full flex-1 space-y-6">
+    <div class="p-6 sm:p-8 rounded-3xl bg-[#0B1120] border border-emerald-500/30 shadow-[0_0_60px_-15px_rgba(16,185,129,0.3)]">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-white/10">
+        <div>
+          <div class="flex items-center gap-2 font-mono text-xs text-emerald-400 font-bold mb-1">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            ENTERPRISE CLOUD IAM & FLEET COMPLIANCE AUDITOR
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white">JumpCloud Fleet Telemetry & Patch Tracker</h1>
+          <p class="text-slate-400 text-sm mt-1 max-w-2xl font-sans">
+            Engineered by Anu Sah. Automates SLA compliance categorization across 1,500+ endpoints via JumpCloud REST API (/v2/systems) and Google Apps Script sheets ingestion.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="dispatch-btn" class="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-slate-900 border border-white/10 text-slate-300 hover:text-white transition-all">
+            DISPATCH WEBHOOK
+          </button>
+          <button id="poll-btn" class="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/60 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all">
+            ↻ POLL JUMPCLOUD API
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 font-mono">
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-white/10">
+          <div class="text-[10px] text-slate-500">FLEET TOTAL</div>
+          <div class="text-xl font-bold text-white">1,500 Nodes</div>
+          <div class="text-[10px] text-slate-400">JumpCloud DaaS</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-emerald-500/30">
+          <div class="text-[10px] text-emerald-400">COMPLIANT (99.4%)</div>
+          <div class="text-xl font-bold text-emerald-400" id="compliant-stat">4 / 6 Active</div>
+          <div class="text-[10px] text-slate-400">&lt; 7 Days Contact</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-amber-500/30">
+          <div class="text-[10px] text-amber-400">PATCH DRIFT</div>
+          <div class="text-xl font-bold text-amber-400" id="warning-stat">2 Devices</div>
+          <div class="text-[10px] text-slate-400">8–14 Days Drift</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-black/40 border border-rose-500/30">
+          <div class="text-[10px] text-rose-400">SLA BREACHED</div>
+          <div class="text-xl font-bold text-rose-400" id="critical-stat">1 Device</div>
+          <div class="text-[10px] text-slate-400">&gt; 14 Days (Flagged)</div>
+        </div>
+      </div>
+
+      <!-- Notification Toast -->
+      <div id="notice-toast" class="hidden p-3 mb-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 font-mono text-xs"></div>
+
+      <!-- Filter Bar -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-4">
+        <div class="flex items-center gap-1.5 w-full sm:w-auto overflow-x-auto font-mono text-xs" id="filter-tabs">
+          <button data-filter="all" class="filter-btn px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-bold">ALL DEVICES</button>
+          <button data-filter="compliant" class="filter-btn px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-slate-400">COMPLIANT</button>
+          <button data-filter="warning" class="filter-btn px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-slate-400">WARNING</button>
+          <button data-filter="critical" class="filter-btn px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-slate-400">CRITICAL DRIFT</button>
+        </div>
+        <input type="text" id="search-input" placeholder="Search hostname, user..." class="w-full sm:w-64 px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400" />
+      </div>
+
+      <!-- Endpoints Table -->
+      <div class="rounded-2xl bg-black border border-white/10 overflow-hidden font-mono text-xs">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-white/10 bg-slate-900/80 text-[10px] text-slate-400 uppercase">
+                <th class="py-2.5 px-4">ENDPOINT // HOST</th>
+                <th class="py-2.5 px-4">ASSIGNED USER</th>
+                <th class="py-2.5 px-4">OPERATING SYSTEM</th>
+                <th class="py-2.5 px-4">LAST CONTACT</th>
+                <th class="py-2.5 px-4">PATCH POSTURE</th>
+                <th class="py-2.5 px-4 text-right">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="endpoints-body" class="divide-y divide-white/5"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="max-w-6xl mx-auto w-full mt-8 pt-4 border-t border-white/10 text-center font-mono text-xs text-slate-500">
+    ANU SAH // INFRASTRUCTURE & IT SECURITY ENGINEER (@Anusah99)
+  </footer>
+
+  <script>
+    let endpoints = [
+      { id: 'JC-8821', hostname: 'SEC-HQ-M3PRO-01', user: 'anu.sah@cyberops.internal', os: 'macOS Sonoma 14.5', hours: 2, patch: '23F79 (Current)', status: 'compliant', quarantine: false },
+      { id: 'JC-4912', hostname: 'FIN-W11-CORP-42', user: 'vikram.mehta@authbridge.com', os: 'Windows 11 23H2', hours: 6, patch: 'KB5037771', status: 'compliant', quarantine: false },
+      { id: 'JC-9104', hostname: 'DEV-UBUNTU-WORKSTATION', user: 'rohit.verma@tech.corp', os: 'Ubuntu 22.04 LTS', hours: 210, patch: 'Linux 5.15.0-89 (Outdated)', status: 'warning', quarantine: false },
+      { id: 'JC-3129', hostname: 'LEGAL-WIN10-LAPTOP', user: 'priya.sharma@legal.corp', os: 'Windows 10 21H2', hours: 412, patch: 'KB5005565 (Unsupported)', status: 'critical', quarantine: true },
+      { id: 'JC-7731', hostname: 'ENG-M2AIR-99', user: 'arjun.singh@devops.corp', os: 'macOS Ventura 13.6', hours: 260, patch: '22G120 (Drifted)', status: 'warning', quarantine: false },
+      { id: 'JC-1054', hostname: 'HR-THINKPAD-X1', user: 'sneha.patel@authbridge.com', os: 'Windows 11 22H2', hours: 520, patch: 'KB5018427 (Critical Drift)', status: 'critical', quarantine: false }
+    ];
+
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    const tbody = document.getElementById('endpoints-body');
+    const toast = document.getElementById('notice-toast');
+    const pollBtn = document.getElementById('poll-btn');
+    const dispatchBtn = document.getElementById('dispatch-btn');
+    const searchInput = document.getElementById('search-input');
+
+    function showNotice(msg) {
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 4000);
+    }
+
+    function render() {
+      const filtered = endpoints.filter(e => {
+        const matchesFilter = currentFilter === 'all' || e.status === currentFilter;
+        const matchesSearch = e.hostname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              e.user.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                              e.os.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesFilter && matchesSearch;
+      });
+
+      tbody.innerHTML = filtered.map(ep => `
+        <tr class="hover:bg-slate-900/40 transition-colors">
+          <td class="py-3 px-4">
+            <div class="font-bold text-white">${ep.hostname}</div>
+            <div class="text-[10px] text-slate-500">${ep.id}</div>
+          </td>
+          <td class="py-3 px-4 text-slate-300">${ep.user}</td>
+          <td class="py-3 px-4 text-slate-400">${ep.os}</td>
+          <td class="py-3 px-4 text-slate-300">${ep.hours < 24 ? ep.hours + 'h ago' : Math.round(ep.hours / 24) + ' days ago'}</td>
+          <td class="py-3 px-4">
+            ${ep.status === 'compliant' ? '<span class="px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/40 text-emerald-400 text-[10px] font-bold">✔ COMPLIANT</span>' :
+              ep.status === 'warning' ? '<span class="px-2 py-0.5 rounded bg-amber-950/70 border border-amber-500/40 text-amber-400 text-[10px] font-bold">⚠ DRIFT</span>' :
+              '<span class="px-2 py-0.5 rounded bg-rose-950/70 border border-rose-500/40 text-rose-400 text-[10px] font-bold">✖ NON-COMPLIANT</span>'}
+          </td>
+          <td class="py-3 px-4 text-right">
+            <button onclick="toggleQuarantine('${ep.id}')" class="px-2.5 py-1 rounded text-[10px] font-bold ${
+              ep.quarantine ? 'bg-rose-950 border border-rose-500 text-rose-300' : 'bg-slate-900 border border-white/10 text-slate-300 hover:border-emerald-400'
+            }">
+              ${ep.quarantine ? 'ISOLATED [RELEASE]' : 'QUARANTINE'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    window.toggleQuarantine = function(id) {
+      endpoints = endpoints.map(e => {
+        if (e.id === id) {
+          const next = !e.quarantine;
+          showNotice(next ? `[ACTION] Enforced Zero-Trust Network Quarantine on ${e.hostname}` : `[ACTION] Released ${e.hostname} from Quarantine`);
+          return { ...e, quarantine: next };
+        }
+        return e;
+      });
+      render();
+    };
+
+    pollBtn.addEventListener('click', async () => {
+      pollBtn.disabled = true;
+      pollBtn.textContent = 'POLLING API...';
+      showNotice('Connecting to JumpCloud REST API (/v2/systems)...');
+      await new Promise(r => setTimeout(r, 1200));
+      pollBtn.disabled = false;
+      pollBtn.textContent = '↻ POLL JUMPCLOUD API';
+      showNotice('✔ Synchronized 1,500 endpoints. Google Sheets telemetry updated.');
+    });
+
+    dispatchBtn.addEventListener('click', () => {
+      showNotice('🚀 Dispatched webhook payload to #secops-alerts for non-compliant endpoints.');
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        currentFilter = e.target.getAttribute('data-filter');
+        document.querySelectorAll('.filter-btn').forEach(b => {
+          b.className = 'filter-btn px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-slate-400';
+        });
+        e.target.className = 'filter-btn px-3 py-1.5 rounded-lg bg-emerald-950/80 border border-emerald-500/60 text-emerald-300 font-bold';
+        render();
+      });
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>

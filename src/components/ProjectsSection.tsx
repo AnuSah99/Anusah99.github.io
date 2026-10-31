@@ -9,19 +9,22 @@ import {
   Copy,
   Check,
   X,
-  Terminal
+  Terminal,
+  Play
 } from 'lucide-react';
 import { PROJECTS_DATA, PERSONAL_DATA } from '../data/portfolioData';
 import { ProjectItem } from '../types';
 import { soundFX } from '../utils/audio';
+import { ProjectLiveModal } from './ProjectLiveModal';
 
 interface TiltCardProps {
   project: ProjectItem;
   index: number;
   onInspect: (project: ProjectItem) => void;
+  onOpenLiveDemo: (project: ProjectItem) => void;
 }
 
-const TiltCard: React.FC<TiltCardProps> = ({ project, index, onInspect }) => {
+const TiltCard: React.FC<TiltCardProps> = ({ project, index, onInspect, onOpenLiveDemo }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
 
   const x = useMotionValue(0);
@@ -145,29 +148,43 @@ const TiltCard: React.FC<TiltCardProps> = ({ project, index, onInspect }) => {
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-1">
+        <div className="space-y-2 pt-1">
           <button
             onClick={() => {
-              soundFX.playKeyClick();
-              onInspect(project);
+              soundFX.playSuccessAccess();
+              onOpenLiveDemo(project);
             }}
-            className="py-2.5 px-3 rounded-xl font-mono text-xs font-bold bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/50 text-cyan-300 transition-all flex items-center justify-center gap-1.5 shadow-neon-cyan active:scale-95"
+            className="w-full py-2.5 px-4 rounded-xl font-mono text-xs font-bold bg-gradient-to-r from-cyan-500/25 via-emerald-500/20 to-cyan-500/25 hover:from-cyan-500/35 hover:to-emerald-500/30 border border-cyan-400/60 text-cyan-200 hover:text-white transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.3)] active:scale-95 group/live"
           >
-            <FileCode2 className="w-3.5 h-3.5" />
-            <span>INSPECT CODE</span>
+            <Play className="w-3.5 h-3.5 text-cyan-300 fill-cyan-300 group-hover/live:scale-110 transition-transform" />
+            <span>LAUNCH LIVE SYSTEM DEMO</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse ml-1" />
           </button>
 
-          <a
-            href={project.githubUrl}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => soundFX.playKeyClick()}
-            className="py-2.5 px-3 rounded-xl font-mono text-xs font-semibold bg-slate-900/90 hover:bg-slate-800 border border-white/10 hover:border-cyan-500/40 text-slate-200 hover:text-white transition-all flex items-center justify-center gap-1.5 group/btn"
-          >
-            <Github className="w-3.5 h-3.5 text-cyan-400 group-hover/btn:rotate-12 transition-transform" />
-            <span>GITHUB</span>
-            <ArrowUpRight className="w-3 h-3 text-slate-400" />
-          </a>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => {
+                soundFX.playKeyClick();
+                onInspect(project);
+              }}
+              className="py-2 px-3 rounded-xl font-mono text-xs font-bold bg-slate-900/80 hover:bg-slate-800 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-cyan-300 transition-all flex items-center justify-center gap-1.5"
+            >
+              <FileCode2 className="w-3.5 h-3.5" />
+              <span>INSPECT CODE</span>
+            </button>
+
+            <a
+              href={project.githubUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => soundFX.playKeyClick()}
+              className="py-2 px-3 rounded-xl font-mono text-xs font-semibold bg-slate-900/80 hover:bg-slate-800 border border-white/10 hover:border-cyan-400/50 text-slate-300 hover:text-white transition-all flex items-center justify-center gap-1.5 group/btn"
+            >
+              <Github className="w-3.5 h-3.5 text-cyan-400 group-hover/btn:rotate-12 transition-transform" />
+              <span>GITHUB</span>
+              <ArrowUpRight className="w-3 h-3 text-slate-400" />
+            </a>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -177,6 +194,7 @@ const TiltCard: React.FC<TiltCardProps> = ({ project, index, onInspect }) => {
 export const ProjectsSection: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'devsecops' | 'automation' | 'endpoint'>('all');
   const [inspectingProject, setInspectingProject] = useState<ProjectItem | null>(null);
+  const [liveDemoProject, setLiveDemoProject] = useState<ProjectItem | null>(null);
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [copiedCode, setCopiedCode] = useState(false);
 
@@ -261,6 +279,7 @@ export const ProjectsSection: React.FC = () => {
             project={project}
             index={index}
             onInspect={handleInspect}
+            onOpenLiveDemo={(p) => setLiveDemoProject(p)}
           />
         ))}
       </div>
@@ -409,6 +428,12 @@ export const ProjectsSection: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Interactive Live System Simulator Modal */}
+      <ProjectLiveModal
+        project={liveDemoProject}
+        onClose={() => setLiveDemoProject(null)}
+      />
     </section>
   );
 };

@@ -266,7 +266,7 @@ export const PROJECTS_DATA: ProjectItem[] = [
     architecture: ['GitHub Actions / Jenkins', 'Docker Multi-stage', 'Trivy Scanner', 'AWS ECR', 'Bash Automation'],
     status: 'PRODUCTION DEPLOYED',
     statusColor: 'cyan',
-    githubUrl: 'https://github.com/Anusah99',
+    githubUrl: 'https://github.com/AnuSah99/CI-CD_Pip',
     demoMetrics: [
       { label: 'CVE Gate Pass', value: '100%', change: 'Strict Zero-Critical' },
       { label: 'Image Size Reduction', value: '-65%', change: 'Alpine Distroless' },
@@ -349,7 +349,7 @@ echo "[✓] Security gate passed."`
     architecture: ['Python 3.11', 'Google Apps Script', 'JumpCloud REST API', 'Google Drive API', 'Slack Webhooks'],
     status: 'OPERATIONAL',
     statusColor: 'emerald',
-    githubUrl: 'https://github.com/Anusah99',
+    githubUrl: 'https://github.com/AnuSah99/cloud_automation',
     demoMetrics: [
       { label: 'Manual Hours Saved', value: '35h / wk', change: 'Fully Automated' },
       { label: 'Report Accuracy', value: '100%', change: 'Zero Human Error' },
@@ -413,7 +413,7 @@ class JumpCloudPatchTracker:
     architecture: ['PowerShell 7.x', 'Bash', 'SentinelOne API', 'WMI / CIM', 'Windows Registry'],
     status: 'VERIFIED',
     statusColor: 'violet',
-    githubUrl: 'https://github.com/Anusah99',
+    githubUrl: 'https://github.com/AnuSah99/Anusah99.github.io/tree/main/projects/endpoint-hardening-telemetry',
     demoMetrics: [
       { label: 'Fleet Hardened', value: '1,500+ Nodes', change: 'Cross-Platform' },
       { label: 'Remediation Speed', value: '< 2 Mins', change: 'Instant Trigger' },
