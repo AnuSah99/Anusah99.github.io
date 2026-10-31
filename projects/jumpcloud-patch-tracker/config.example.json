@@ -1,0 +1,16 @@
+{
+  "jumpcloud": {
+    "api_key": "YOUR_JUMPCLOUD_API_KEY",
+    "org_id": "YOUR_OPTIONAL_ORG_ID",
+    "compliance_threshold_days": 14,
+    "critical_threshold_days": 30
+  },
+  "notifications": {
+    "slack_webhook_url": "https://hooks.slack.com/services/T00/B00/XXXX",
+    "alert_channel": "#secops-telemetry"
+  },
+  "google_workspace": {
+    "drive_folder_id": "1A2B3C4D5E6F7G8H9I",
+    "spreadsheet_id": "1z9y8x7w6v5u4t3s2r"
+  }
+}

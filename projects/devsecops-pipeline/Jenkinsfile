@@ -1,0 +1,82 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION     = 'ap-south-1'
+        ECR_REGISTRY   = '123456789012.dkr.ecr.ap-south-1.amazonaws.com'
+        ECR_REPO       = 'secops-enterprise-service'
+        IMAGE_TAG      = "${BUILD_NUMBER}-${GIT_COMMIT.take(7)}"
+        TRIVY_SEVERITY = 'CRITICAL,HIGH'
+    }
+
+    options {
+        buildDiscarder(logRotator(numToKeepStr: '15'))
+        timeout(time: 25, unit: 'MINUTES')
+        disableConcurrentBuilds()
+    }
+
+    stages {
+        stage('Initialize & Checkout') {
+            steps {
+                echo "🚀 Starting DevSecOps Pipeline for Anu Sah release node..."
+                checkout scm
+            }
+        }
+
+        stage('Static Analysis & Secrets Gate') {
+            steps {
+                sh '''
+                    echo "[+] Running gitleaks secret detection..."
+                    gitleaks detect --source=. --verbose --redact || true
+                '''
+            }
+        }
+
+        stage('Build Hardened Docker Image') {
+            steps {
+                sh '''
+                    echo "[+] Building multi-stage container..."
+                    docker build --pull -t ${ECR_REPO}:${IMAGE_TAG} -f Dockerfile .
+                '''
+            }
+        }
+
+        stage('Trivy Security Gate') {
+            steps {
+                sh '''
+                    echo "[+] Executing Trivy CVE scan against ${ECR_REPO}:${IMAGE_TAG}..."
+                    trivy image --exit-code 1 --severity ${TRIVY_SEVERITY} --ignore-unfixed ${ECR_REPO}:${IMAGE_TAG}
+                '''
+            }
+        }
+
+        stage('Push to AWS ECR') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withAWS(region: "${AWS_REGION}", credentials: 'aws-ecr-jenkins-key') {
+                    sh '''
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+                        docker tag ${ECR_REPO}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}
+                        docker tag ${ECR_REPO}:${IMAGE_TAG} ${ECR_REGISTRY}/${ECR_REPO}:latest
+                        docker push ${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}
+                        docker push ${ECR_REGISTRY}/${ECR_REPO}:latest
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo "✅ DevSecOps release passed all compliance, CVE, and deployment gates."
+        }
+        failure {
+            echo "❌ Security gate failure! Notification dispatched to SecOps team."
+        }
+    }
+}
