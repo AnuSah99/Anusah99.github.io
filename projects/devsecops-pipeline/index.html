@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Automated DevSecOps Pipeline // Live Simulator - Anu Sah</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Space Grotesk', sans-serif; background-color: #07090E; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen p-4 sm:p-8 flex flex-col justify-between">
+  <!-- HUD Header -->
+  <header class="max-w-6xl mx-auto w-full mb-8 flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
+    <div class="flex items-center gap-3">
+      <a href="../../" class="text-xs font-mono px-3 py-1.5 rounded-lg bg-slate-900 border border-white/10 text-cyan-400 hover:text-white transition-colors">
+        ← BACK TO PORTFOLIO
+      </a>
+      <span class="text-slate-600 font-mono">/</span>
+      <span class="text-xs font-mono text-slate-400">PROJ-01 // LIVE DEMO</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="https://github.com/AnuSah99/CI-CD_Pip" target="_blank" class="text-xs font-mono px-3.5 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-400/50 text-cyan-300 hover:bg-cyan-500/30 transition-all font-bold">
+        VIEW GITHUB REPO ↗
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-6xl mx-auto w-full flex-1 space-y-6">
+    <div class="p-6 sm:p-8 rounded-3xl bg-[#0B1120] border border-cyan-500/30 shadow-[0_0_60px_-15px_rgba(6,182,212,0.3)]">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-white/10">
+        <div>
+          <div class="flex items-center gap-2 font-mono text-xs text-cyan-400 font-bold mb-1">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            ZERO-VULNERABILITY AUTOMATED CONTAINER RELEASE GATE
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white">Automated DevSecOps CI/CD Pipeline</h1>
+          <p class="text-slate-400 text-sm mt-1 max-w-2xl font-sans">
+            Engineered by Anu Sah. Integrates Gitleaks secret detection, Semgrep OWASP SAST, multi-stage Distroless Docker compilation, Trivy High/Critical CVE gating, Cosign cryptographic signing, and AWS ECR release.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <button id="toggle-cve-btn" class="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-slate-900 border border-white/10 text-slate-400 hover:text-white transition-all">
+            CVE INJECTION: <span id="cve-state" class="text-slate-500">OFF</span>
+          </button>
+          <button id="trigger-btn" class="px-5 py-2.5 rounded-xl text-xs font-mono font-bold bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/60 text-cyan-300 shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-all">
+            ▶ TRIGGER PIPELINE RUN
+          </button>
+        </div>
+      </div>
+
+      <!-- Pipeline Stages Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 mb-6" id="stages-grid">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Log Terminal -->
+      <div class="rounded-2xl bg-black border border-white/10 overflow-hidden font-mono text-xs">
+        <div class="px-4 py-2 bg-slate-900 border-b border-white/10 flex items-center justify-between text-slate-400">
+          <span class="text-xs font-bold text-slate-200">PIPELINE RUNNER EXECUTION TERMINAL</span>
+          <span class="text-[10px] text-emerald-400">ONLINE</span>
+        </div>
+        <div id="terminal-logs" class="p-4 h-64 overflow-y-auto space-y-1 text-[11px] leading-relaxed text-slate-300">
+          <div class="text-slate-500">[INIT] DevSecOps runner daemon listening on pipeline queue...</div>
+          <div class="text-cyan-400">[READY] Click "TRIGGER PIPELINE RUN" to execute automated multi-stage security gate.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="max-w-6xl mx-auto w-full mt-8 pt-4 border-t border-white/10 text-center font-mono text-xs text-slate-500">
+    ANU SAH // INFRASTRUCTURE & IT SECURITY ENGINEER (@Anusah99)
+  </footer>
+
+  <script>
+    const stages = [
+      { id: 'gitleaks', name: 'Gitleaks Secrets', tool: 'Gitleaks v8.18', status: 'idle' },
+      { id: 'semgrep', name: 'Semgrep SAST', tool: 'OWASP Top 10', status: 'idle' },
+      { id: 'docker', name: 'Distroless Docker', tool: 'Multi-stage Build', status: 'idle' },
+      { id: 'trivy', name: 'Trivy CVE Gate', tool: 'Strict Gate (H/C)', status: 'idle' },
+      { id: 'cosign', name: 'Cosign Signing', tool: 'Sigstore OCI', status: 'idle' },
+      { id: 'ecr', name: 'AWS ECR Release', tool: 'ap-south-1', status: 'idle' }
+    ];
+
+    let injectCVE = false;
+    let isRunning = false;
+
+    const stagesGrid = document.getElementById('stages-grid');
+    const logsEl = document.getElementById('terminal-logs');
+    const triggerBtn = document.getElementById('trigger-btn');
+    const cveBtn = document.getElementById('toggle-cve-btn');
+    const cveState = document.getElementById('cve-state');
+
+    function renderStages() {
+      stagesGrid.innerHTML = stages.map((s, idx) => `
+        <div class="p-3.5 rounded-xl border font-mono text-xs transition-all ${
+          s.status === 'success' ? 'bg-emerald-950/40 border-emerald-500/50 text-emerald-300' :
+          s.status === 'failed' ? 'bg-rose-950/60 border-rose-500/80 text-rose-300' :
+          s.status === 'running' ? 'bg-cyan-950/60 border-cyan-400 text-cyan-200 animate-pulse' :
+          'bg-slate-900/60 border-white/10 text-slate-400'
+        }">
+          <div class="flex justify-between mb-1">
+            <span class="text-[10px] text-slate-500">0${idx + 1}</span>
+            <span class="text-[10px] font-bold ${
+              s.status === 'success' ? 'text-emerald-400' :
+              s.status === 'failed' ? 'text-rose-400' :
+              s.status === 'running' ? 'text-cyan-400' : 'text-slate-600'
+            }">${s.status.toUpperCase()}</span>
+          </div>
+          <div class="font-bold text-white text-xs mb-1">${s.name}</div>
+          <div class="text-[10px] text-slate-400">${s.tool}</div>
+        </div>
+      `).join('');
+    }
+
+    function appendLog(msg, color = 'text-slate-300') {
+      const time = new Date().toTimeString().split(' ')[0];
+      const div = document.createElement('div');
+      div.className = `${color} font-mono`;
+      div.textContent = `[${time}] ${msg}`;
+      logsEl.appendChild(div);
+      logsEl.scrollTop = logsEl.scrollHeight;
+    }
+
+    cveBtn.addEventListener('click', () => {
+      injectCVE = !injectCVE;
+      cveState.textContent = injectCVE ? 'ACTIVE' : 'OFF';
+      cveState.className = injectCVE ? 'text-rose-400 font-bold' : 'text-slate-500';
+    });
+
+    triggerBtn.addEventListener('click', async () => {
+      if (isRunning) return;
+      isRunning = true;
+      triggerBtn.disabled = true;
+      triggerBtn.textContent = 'RUNNING...';
+
+      stages.forEach(s => s.status = 'idle');
+      renderStages();
+      logsEl.innerHTML = '';
+      appendLog('▶ Pipeline triggered on commit 6fa2a81 via GitHub Actions...', 'text-cyan-400');
+
+      for (let i = 0; i < stages.length; i++) {
+        stages[i].status = 'running';
+        renderStages();
+        appendLog(`▶ [${stages[i].name}] Started via ${stages[i].tool}...`, 'text-cyan-300');
+
+        if (stages[i].id === 'trivy' && injectCVE) {
+          await new Promise(r => setTimeout(r, 1400));
+          stages[i].status = 'failed';
+          renderStages();
+          appendLog('[!] CRITICAL CVE-2026-4401 DETECTED in container dependencies!', 'text-rose-400');
+          appendLog('[FAIL] Trivy Gate failed with exit code 1. Release blocked by policy.', 'text-rose-400 font-bold');
+          isRunning = false;
+          triggerBtn.disabled = false;
+          triggerBtn.textContent = '▶ TRIGGER PIPELINE RUN';
+          return;
+        }
+
+        await new Promise(r => setTimeout(r, 1100));
+        stages[i].status = 'success';
+        renderStages();
+        appendLog(`✔ [${stages[i].name}] PASSED without violations.`, 'text-emerald-400');
+      }
+
+      appendLog('[SUCCESS] Artifact signed with Cosign and deployed to AWS ECR!', 'text-emerald-400 font-bold');
+      isRunning = false;
+      triggerBtn.disabled = false;
+      triggerBtn.textContent = '▶ TRIGGER PIPELINE RUN';
+    });
+
+    renderStages();
+  </script>
+</body>
+</html>
